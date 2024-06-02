@@ -35,6 +35,12 @@ jobs:
           push: true
           tags: ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
+      - name: Add SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" >> ~/.ssh/known_hosts
+        shell: bash
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
