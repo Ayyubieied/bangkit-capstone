@@ -6,9 +6,9 @@ on:
       - main
 
 env:
-  CI_REGISTRY: ${{ secrets.CI_REGISTRY }}
   REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  CI_REGISTRY: docker.io
   IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
   IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
 
@@ -39,7 +39,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan ${{ secrets.GCP_STATIC_IP }} >> ~/.ssh/known_hosts
 
       - name: Deploy to Server
