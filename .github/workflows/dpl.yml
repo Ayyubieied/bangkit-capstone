@@ -1,5 +1,10 @@
 name: CI/CD Pipeline
 
+on:
+  push:
+    branches:
+      - main
+
 env:
   CI_REGISTRY: ${{ secrets.CI_REGISTRY }}
   REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
