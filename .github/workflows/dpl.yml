@@ -44,7 +44,7 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
-          docker rm -f ${{ secrets.CONTAINER_NAME }} || true &&
-          docker image rm -f ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} || true &&
-          docker run --name ${{ secrets.CONTAINER_NAME }} -p ${{ secrets.PORT }}:8000 -d ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+        ssh ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
+        sudo docker rm -f ${{ secrets.CONTAINER_NAME }} || true &&
+        sudo docker image rm -f ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} || true &&
+        sudo docker run --name ${{ secrets.CONTAINER_NAME }} -p ${{ secrets.PORT }}:8000 -d ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
