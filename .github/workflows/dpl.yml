@@ -1,42 +1,48 @@
-name: Deploy
+name: CI/CD Pipeline
 
 on:
   push:
-    # Reminder: Make sure the `branches` list only contain the name of main
-    # branch! Usually, the main branch name is either `master` or `main`.
-    # Check the list of branches of your repository via GitHub Web interface or
-    # use `git branch -av` command in your shell.
-
-    # This event trigger will only run the workflow whenever there are new
-    # commits pushed to the main branch. Therefore, the deployed app that
-    # will be accessed by users will be based on the latest version of the
-    # main branch.
     branches:
       - main
 
+env:
+  REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  CI_REGISTRY: docker.io
+  IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
+
 jobs:
-  Deployment:
+  deploy:
     runs-on: ubuntu-latest
-    env:
-      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Ruby 2.7
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '2.7'
-    - name: Install dpl
-      run: gem install dpl
-    - name: Deploy to Heroku
-      run: dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_API_KEY
-    - uses: chrnorm/deployment-action@releases/v1
-      name: Create GitHub deployment
-      with:
-        initial_status: success
-        token: ${{ github.token }}
-        # Assuming you are not using custom domain on Heroku, the target_url
-        # will contain the URL to your application hosted under Heroku's
-        # subdomain.
-        target_url: https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com
-        environment: production
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ env.CI_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy to Server
+        run: |
+          ssh ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
+          docker rm -f ${{ secrets.CONTAINER_NAME }} || true &&
+          docker image rm -f ${{ env.CI_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} || true &&
+          docker run --name ${{ secrets.CONTAINER_NAME }} -p ${{ secrets.PORT }}:8000 -d ${{ env.CI_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
