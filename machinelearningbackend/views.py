@@ -46,13 +46,17 @@ def name2index(name):
 def index2prod(index):
     return df2.iloc[index]
 
+def convert_to_rupiah(price_in_rupees):
+    price_in_rupees = price_in_rupees.replace("₹", "").strip()
+    price_in_rupiah = int(price_in_rupees) * 195
+    return "Rp " + str(price_in_rupiah)
+
 
 def wrap(info_arr):
     result = {}
-#     print(info_arr)
     result['brand'] = info_arr[0]
     result['name'] = info_arr[1]
-    result['price'] = info_arr[2]
+    result['price'] = convert_to_rupiah(info_arr[2])
     result['url'] = info_arr[3]
     result['img'] = info_arr[4]
     result['skin type'] = info_arr[5]
@@ -61,7 +65,6 @@ def wrap(info_arr):
 
 def wrap_makeup(info_arr):
     result = {}
-#     print(info_arr)
     result['brand'] = info_arr[0]
     result['name'] = info_arr[1]
     result['price'] = info_arr[2]
@@ -74,7 +77,6 @@ def wrap_makeup(info_arr):
 one_hot_encodings = np.zeros([entries, len(features)])
 
 
-#skin types first
 for i in range(entries):
     for j in range(5):
         target = features[j]
@@ -84,14 +86,11 @@ for i in range(entries):
         elif target == sk_type:
             one_hot_encodings[i][j] = 1
 
-#other features
 for i in range(entries):
     for j in range(5, len(features)):
         feature = features[j]
         if feature in df2.iloc[i]['concern']:
             one_hot_encodings[i][j] = 1
-
-# recommend top 5 similar items from a category
 
 
 def recs_cs(vector = None, name = None, label = None, count = 5):
@@ -112,20 +111,14 @@ def recs_cs(vector = None, name = None, label = None, count = 5):
     if name:
         dff = dff[dff['name'] != name]
     recommendations = dff.sort_values('cs', ascending=False).head(count)
-    #   print(f"Top {count} matching {label} items")
     data = recommendations[['brand', 'name', 'price', 'url','img','skin type','concern']].to_dict('split')['data']
     for element in data:
         products.append(wrap(element))
     return products
 
-    # overall recommendation
-
-
 def recs_essentials(vector = None, name = None):
-#     print("ESSENTIALS:")
     response = {}
     for label in LABELS:
-#         print(f"{label}:")
         if name: 
             r = recs_cs(None, name, label)
         elif vector:
@@ -185,17 +178,14 @@ class SkinMetrics(APIView):
             skin_type = prediction_skin(img_path)
             acne_type = prediction_acne(img_path)
             tone = identify_skin_tone(img_path, dataset=skin_tone_dataset)
-            os.unlink(img_path)  # delete the file
+            os.unlink(img_path) 
             
-            # Generate feature vector for the user's skin
             feature_vector = [0] * len(features)
             feature_vector[features.index(skin_type)] = 1
             if acne_type == 'Severe':
                 feature_vector[features.index('acne')] = 1
             
-            # Get skincare and makeup recommendations
             skincare_recs = recs_essentials(vector=feature_vector)
-            makeup_recs = makeup_recommendation(tone, skin_type)
             
             return Response({
                 'type': skin_type, 
