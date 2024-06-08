@@ -165,9 +165,8 @@ def skin_cluster(dframe):
 # Append removed pixels to the dataframe and get cluster matrix
 def cluster_matrix(dframe, dframe_removed, skin_cluster_label, height, width):
     dframe_removed['cluster'] = np.full((len(dframe_removed.index), 1), -1)
-    dframe = dframe.append(dframe_removed, ignore_index=False).sort_index()
-    dframe['cluster'] = (dframe['cluster'] ==
-                         skin_cluster_label).astype(int) * 255
+    dframe = pd.concat([dframe, dframe_removed], ignore_index=True).sort_index()
+    dframe['cluster'] = (dframe['cluster'] == skin_cluster_label).astype(int) * 255
     cluster_label_mat = np.asarray(
         dframe['cluster'].values.reshape(height, width), dtype=np.uint8)
     return cluster_label_mat

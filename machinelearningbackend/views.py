@@ -1,7 +1,9 @@
 import os
 import base64
+import uuid
 from PIL import Image
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
@@ -11,13 +13,14 @@ from rest_framework.response import Response
 from django.core.files.base import ContentFile
 from tempfile import NamedTemporaryFile
 from .models.skin_tone.skin_tone_knn import identify_skin_tone
+from django.conf import settings
 
 class_names1 = ['Dry_skin', 'Normal_skin', 'Oil_skin']
 class_names2 = ['Low', 'Moderate', 'Severe']
-skin_tone_dataset = 'models/skin_tone/skin_tone_dataset.csv'
+skin_tone_dataset = 'machinelearningbackend/models/skin_tone/skin_tone_dataset.csv'
 
-model1 = load_model('./models/skin_model')
-model2 = load_model('./models/acne_model')
+model1 = tf.saved_model.load('machinelearningbackend/models/skin_model')
+model2 = tf.saved_model.load('machinelearningbackend/models/acne_model')
 
 def load_image(img_path):
     img = image.load_img(img_path, target_size=(224, 224))
@@ -28,7 +31,7 @@ def load_image(img_path):
 
 def prediction_skin(img_path):
     new_image = load_image(img_path)
-    pred1 = model1.predict(new_image)
+    pred1 = model1(new_image)
     if len(pred1[0]) > 1:
         pred_class1 = class_names1[tf.argmax(pred1[0])]
     else:
@@ -37,7 +40,7 @@ def prediction_skin(img_path):
 
 def prediction_acne(img_path):
     new_image = load_image(img_path)
-    pred2 = model2.predict(new_image)
+    pred2 = model2(new_image)
     if len(pred2[0]) > 1:
         pred_class2 = class_names2[tf.argmax(pred2[0])]
     else:
@@ -49,11 +52,14 @@ class SkinMetrics(APIView):
         serializer = ImageUploadSerializer(data=request.data)
         if serializer.is_valid():
             image = serializer.validated_data['image']
-            img_temp = NamedTemporaryFile(delete=True)
-            img_temp.write(image.read())
-            img_temp.flush()
-            skin_type = prediction_skin(img_temp.name)
-            acne_type = prediction_acne(img_temp.name)
-            tone = identify_skin_tone(img_temp.name, dataset=skin_tone_dataset)
+            img_name = f"{uuid.uuid4()}.jpg"
+            img_path = os.path.join(settings.MEDIA_ROOT, img_name)
+            with open(img_path, 'wb+') as destination:
+                for chunk in image.chunks():
+                    destination.write(chunk)
+            skin_type = prediction_skin(img_path)
+            acne_type = prediction_acne(img_path)
+            tone = identify_skin_tone(img_path, dataset=skin_tone_dataset)
+            os.unlink(img_path)  # delete the file
             return Response({'type': skin_type, 'tone': str(tone), 'acne': acne_type}, status=200)
         return Response(serializer.errors, status=400)
