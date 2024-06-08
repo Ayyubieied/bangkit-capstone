@@ -1,8 +1,8 @@
 from django.urls import path
-from machinelearningbackend.views import SkinMetrics
+from machinelearningbackend.views import *
 
 app_name = 'machinelearningbackend' 
 
 urlpatterns = [
-    path('upload/', SkinMetrics.as_view(), name='upload'),
+    path('upload/', skin_metrics, name='upload'),
 ]

@@ -16,7 +16,8 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import uuid
 from django.conf import settings
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 class_names1 = ['Dry_skin', 'Normal_skin', 'Oil_skin']
 class_names2 = ['Low', 'Moderate', 'Severe']
@@ -164,10 +165,16 @@ def prediction_acne(img_path):
     else:
         pred_class2 = class_names2[int(tf.round(pred2[0]))]
     return pred_class2
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from rest_framework.parsers import JSONParser
 
-class SkinMetrics(APIView):
-    def post(self, request, format=None):
-        serializer = ImageUploadSerializer(data=request.data)
+@csrf_exempt
+def skin_metrics(request):
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        serializer = ImageUploadSerializer(data=request.FILES)
         if serializer.is_valid():
             image = serializer.validated_data['image']
             img_name = f"{uuid.uuid4()}.jpg"
@@ -187,10 +194,10 @@ class SkinMetrics(APIView):
             
             skincare_recs = recs_essentials(vector=feature_vector)
             
-            return Response({
+            return JsonResponse({
                 'type': skin_type, 
                 'tone': str(tone), 
                 'acne': acne_type,
                 'skincare_recommendations': skincare_recs,
             }, status=200)
-        return Response(serializer.errors, status=400)
+        return JsonResponse(serializer.errors, status=400)
