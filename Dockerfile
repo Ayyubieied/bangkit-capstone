@@ -8,6 +8,7 @@ RUN addgroup --system app && adduser --system --group app
 WORKDIR $APP_HOME
 
 # upgrade packages
+RUN apt-get update && apt-get install -y libgl1-mesa-dev
 RUN apt-get update && apt-get install -y --no-install-recommends netcat-traditional
 RUN pip install --upgrade pip  
 
