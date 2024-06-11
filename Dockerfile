@@ -32,4 +32,4 @@ RUN chmod +x  $APP_HOME/entrypoint.sh
 ENTRYPOINT ["/home/app/web/entrypoint.sh"]
 
 # start server  
-CMD ["gunicorn", "--workers=2", "project_django.wsgi", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "--workers=2", "--timeout=700", "project_django.wsgi", "--bind", "0.0.0.0:8000"]
