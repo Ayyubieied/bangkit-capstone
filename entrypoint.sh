@@ -10,7 +10,7 @@ then
 
     echo "Database siap"
 fi
-
+echo "$DATABASE"
 # perform database migration
 python manage.py makemigrations
 python manage.py migrate
