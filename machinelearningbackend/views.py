@@ -172,8 +172,6 @@ from rest_framework.parsers import JSONParser
 @csrf_exempt
 def skin_metrics(request):
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
         serializer = ImageUploadSerializer(data=request.FILES)
         if serializer.is_valid():
             image = serializer.validated_data['image']
