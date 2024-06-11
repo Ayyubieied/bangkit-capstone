@@ -22,3 +22,4 @@ pandas
 scikit-learn
 opencv-python
 matplotlib
+django-environ
