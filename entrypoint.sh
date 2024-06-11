@@ -10,7 +10,7 @@ then
 
     echo "Database siap"
 fi
-echo "$DATABASE"
+echo "DATABASE VAR $DATABASE"
 # perform database migration
 python manage.py makemigrations
 python manage.py migrate
