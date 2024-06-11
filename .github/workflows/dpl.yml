@@ -47,4 +47,10 @@ jobs:
           ssh ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
           sudo docker rm -f ${{ secrets.CONTAINER_NAME }} || true &&
           sudo docker image rm -f ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} || true &&
-          sudo docker run --name ${{ secrets.CONTAINER_NAME }} -p 30000:8000 -d ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+          sudo docker run --name ${{ secrets.CONTAINER_NAME }} -p 30000:8000 -d \
+          -e DB_HOST=${{ secrets.DB_HOST }} \
+          -e DB_PORT=${{ secrets.DB_PORT }} \
+          -e DB_USER=${{ secrets.DB_USER }} \
+          -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+          -e DB_NAME=${{ secrets.DB_NAME }} \
+          ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
