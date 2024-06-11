@@ -53,4 +53,5 @@ jobs:
           -e DB_USER=${{ secrets.DB_USER }} \
           -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
           -e DB_NAME=${{ secrets.DB_NAME }} \
+          -e DATABASE=${{ secrets.DATABASE }} \
           ${{ env.CI_REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
